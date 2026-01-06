@@ -9,20 +9,19 @@ services:
     image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
 
   open-webui:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
+    # ⬇️ use YOUR image from GHCR
+    image: ghcr.io/makeouthillx32/open-webui:${WEBUI_DOCKER_TAG-main}
     container_name: open-webui
     volumes:
       - open-webui:/app/backend/data
     depends_on:
       - ollama
     ports:
-      - ${OPEN_WEBUI_PORT-3000}:8080
+      # host:container  (default host port 3010, override with OPEN_WEBUI_PORT)
+      - ${OPEN_WEBUI_PORT-3010}:8080
     environment:
-      - 'OLLAMA_BASE_URL=http://ollama:11434'
-      - 'WEBUI_SECRET_KEY='
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
