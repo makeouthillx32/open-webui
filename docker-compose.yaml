@@ -1,19 +1,18 @@
-# one-file version (no extends). Paste over your stack.
-
 services:
-  # --- base ---
   ollama:
-    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    volumes:
+      - ollama:/root/.ollama
     container_name: ollama
     pull_policy: always
     tty: true
     restart: unless-stopped
-    volumes:
-      - ollama:/root/.ollama
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
 
   open-webui:
     image: ghcr.io/makeouthillx32/open-webui:${WEBUI_DOCKER_TAG-main}
     container_name: open-webui
+    volumes:
+      - open-webui:/app/backend/data
     depends_on:
       - ollama
     ports:
@@ -23,41 +22,7 @@ services:
       - WEBUI_SECRET_KEY=
     extra_hosts:
       - host.docker.internal:host-gateway
-      - love-models.local:host-gateway
-    volumes:
-      - open-webui:/app/backend/data
     restart: unless-stopped
-
-  # --- Docker Model Runner API (OpenAI-compatible) ---
-  docker-models-api:
-    image: ghcr.io/docker/model-runner:latest
-    container_name: docker-models-api
-    restart: unless-stopped
-    # Expose it on LAN for Open WebUI (change host port if you want)
-    ports:
-      - "12434:12434"
-    environment:
-      # bind inside container
-      - MODEL_RUNNER_HOST=0.0.0.0
-      - MODEL_RUNNER_PORT=12434
-
-  # --- GPU runner (if you have NVIDIA + want it) ---
-  docker-models-gpu:
-    image: ghcr.io/docker/model-runner-gpu:latest
-    container_name: docker-models-gpu
-    restart: unless-stopped
-    # If you want GPU runner to serve on a different port:
-    ports:
-      - "12435:12434"
-    environment:
-      - MODEL_RUNNER_HOST=0.0.0.0
-      - MODEL_RUNNER_PORT=12434
-    # NVIDIA runtime (works on Linux hosts; on Windows/WSL this may not)
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: ["gpu"]
 
 volumes:
   ollama: {}
