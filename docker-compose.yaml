@@ -1,44 +1,33 @@
 services:
   ollama:
-    volumes:
-      - ollama:/root/.ollama
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
     container_name: ollama
     pull_policy: always
     tty: true
     restart: unless-stopped
-    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    volumes:
+      - ollama:/root/.ollama
 
-  # Docker Model Runner (Docker Desktop / Docker Engine feature)
-  # Image: docker/model-runner
-  # NOTE: this does NOT work as a normal standalone container unless your Docker host
-  # actually supports Model Runner (Docker Desktop AI / model plugin).
   model-runner:
     image: docker/model-runner:latest
-    container_name: docker-model-runner
+    container_name: model-runner
     restart: unless-stopped
     ports:
       - "12434:80"
-    extra_hosts:
-      - host.docker.internal:host-gateway
 
   open-webui:
     image: ghcr.io/makeouthillx32/open-webui:${WEBUI_DOCKER_TAG-main}
     container_name: open-webui
-    volumes:
-      - open-webui:/app/backend/data
-    depends_on:
-      - ollama
-      - model-runner
+    restart: unless-stopped
     ports:
       - ${OPEN_WEBUI_PORT-3010}:8080
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - WEBUI_SECRET_KEY=
-      # optional: if you’re using the pipeline, point it at this
-      # - DMR_BASE_URL=http://model-runner
     extra_hosts:
       - host.docker.internal:host-gateway
-    restart: unless-stopped
+    volumes:
+      - open-webui:/app/backend/data
 
 volumes:
   ollama: {}
